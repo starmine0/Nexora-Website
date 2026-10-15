@@ -1,0 +1,563 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0b12">
+  <meta name="description" content="Notifier is a Discord bot that keeps your community updated with automatic creator notifications.">
+  <title>Notifier — Discord Notification Bot</title>
+  <style>
+    :root {
+      --bg: #0b0b12;
+      --panel: #13131f;
+      --text: #f7f7ff;
+      --muted: #aaaabe;
+      --purple: #9471ff;
+      --cyan: #67e8f9;
+      --border: rgba(255,255,255,.09);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, Arial, sans-serif;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(111,72,230,.19), transparent 48%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .container { width: min(1120px, 90%); margin: auto; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11,11,18,.84);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      min-height: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 1.3rem;
+      font-weight: 850;
+      letter-spacing: -.5px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--purple), #5a48e8);
+      box-shadow: 0 0 28px rgba(148,113,255,.28);
+      font-size: 1.35rem;
+    }
+
+    .nav-links { display: flex; gap: 27px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: .93rem; }
+    .nav-links a:hover { color: white; }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: .94rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, filter .2s;
+    }
+
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .btn-primary {
+      background: linear-gradient(135deg, #9270ff, #6552e9);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 8px 30px rgba(111,78,235,.18);
+    }
+    .btn-secondary { background: rgba(255,255,255,.04); }
+
+    .hero { padding: 105px 0 90px; text-align: center; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(148,113,255,.35);
+      background: rgba(148,113,255,.09);
+      border-radius: 100px;
+      padding: 7px 13px;
+      color: #d2c5ff;
+      font-size: .83rem;
+      margin-bottom: 25px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9dffbd;
+      box-shadow: 0 0 10px #9dffbd;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0 auto 22px;
+      font-size: clamp(2.7rem, 7vw, 5.3rem);
+      line-height: 1.07;
+      letter-spacing: -3px;
+      font-weight: 900;
+    }
+
+    .gradient-text {
+      background: linear-gradient(95deg, #bba5ff, #8b79ff, #67e8f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .preview {
+      max-width: 790px;
+      margin: 65px auto 0;
+      padding: 22px;
+      text-align: left;
+      border: 1px solid rgba(148,113,255,.24);
+      border-radius: 23px;
+      background: linear-gradient(145deg, #191727, #101019);
+      box-shadow: 0 30px 100px rgba(0,0,0,.3);
+    }
+
+    .preview-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .avatar {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #a38bff, #4f46e5);
+      border-radius: 14px;
+      font-size: 1.2rem;
+    }
+
+    .preview-top small, .muted { color: var(--muted); }
+    .preview-content { padding: 20px 0 2px; }
+
+    .discord-label {
+      font-size: .8rem;
+      font-weight: 800;
+      color: #b8a7ff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .alert-card {
+      margin-top: 14px;
+      border-left: 3px solid var(--purple);
+      padding: 15px;
+      border-radius: 7px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .alert-card p { font-size: .92rem; margin-top: 5px; }
+
+    section { padding: 78px 0; }
+
+    .section-heading { text-align: center; margin-bottom: 43px; }
+
+    .section-heading h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -1.3px;
+      margin-bottom: 10px;
+    }
+
+    .section-heading p { color: var(--muted); max-width: 600px; margin: auto; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+    .card {
+      padding: 25px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+      transition: transform .2s, border-color .2s;
+    }
+
+    .card:hover { transform: translateY(-4px); border-color: rgba(148,113,255,.45); }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(148,113,255,.13);
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+    }
+
+    .card h3 { margin-bottom: 8px; font-size: 1.08rem; }
+    .card p { color: var(--muted); font-size: .94rem; }
+
+    .platform-card { text-align: center; }
+    .platform-card .feature-icon { margin: 0 auto 15px; }
+
+    .tag {
+      display: inline-block;
+      margin-top: 13px;
+      border-radius: 50px;
+      padding: 4px 10px;
+      font-size: .76rem;
+      color: #d2c5ff;
+      background: rgba(148,113,255,.12);
+    }
+
+    .commands { max-width: 800px; margin: auto; }
+
+    .command {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 17px 19px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .command code { color: #c6b6ff; font-weight: 800; font-size: .95rem; }
+    .command span { color: var(--muted); text-align: right; font-size: .9rem; }
+
+    .cta {
+      padding: 58px 25px;
+      text-align: center;
+      border: 1px solid rgba(148,113,255,.25);
+      border-radius: 25px;
+      background: radial-gradient(ellipse at top, rgba(119,82,231,.2), transparent 70%), var(--panel);
+    }
+
+    .cta h2 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.2; margin-bottom: 15px; }
+    .cta p { color: var(--muted); max-width: 580px; margin: 0 auto 25px; }
+
+    .faq { max-width: 800px; margin: auto; }
+    details { padding: 19px 0; border-bottom: 1px solid var(--border); }
+    summary { cursor: pointer; font-weight: 750; }
+    details p { color: var(--muted); padding-top: 12px; }
+
+    footer { border-top: 1px solid var(--border); padding: 30px 0; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    footer p, footer a { color: var(--muted); font-size: .88rem; }
+    footer a:hover { color: white; }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+
+    @media (max-width: 760px) {
+      .nav-links { display: none; }
+      .hero { padding: 75px 0 60px; }
+      h1 { letter-spacing: -1.8px; }
+      .grid { grid-template-columns: 1fr; }
+      section { padding: 60px 0; }
+      .preview { padding: 17px; margin-top: 43px; }
+      .command { align-items: flex-start; flex-direction: column; gap: 5px; }
+      .command span { text-align: left; }
+      .footer-inner { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a class="brand" href="#home">
+        <span class="logo">✦</span>
+        <span>Notifier</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#commands">Commands</a>
+        <a href="#faq">FAQ</a>
+      </div>
+
+      <a class="btn btn-primary" data-link="invite" href="#">Add to Discord ↗</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container" id="home">
+      <div class="pill"><span class="dot"></span> Your community, always updated</div>
+
+      <h1>
+        Never miss a moment.<br>
+        <span class="gradient-text">Stay connected.</span>
+      </h1>
+
+      <p>
+        Meet Notifier — the Discord bot that helps your community stay
+        up to date with new creator content and automatic notifications.
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" data-link="invite" href="#">✦ Add to Discord</a>
+        <a class="btn btn-secondary" data-link="support" href="#">Join Support Server ↗</a>
+      </div>
+
+      <div class="preview">
+        <div class="preview-top">
+          <div class="avatar">✦</div>
+          <div>
+            <strong>Notifier</strong>
+            <div><small>BOT · Notification Preview</small></div>
+          </div>
+        </div>
+
+        <div class="preview-content">
+          <div class="discord-label">🔔 New content notification</div>
+          <div class="alert-card">
+            <strong>New video from your tracked creator!</strong>
+            <p>Get notified in your Discord server when new content is detected.</p>
+            <p class="muted">Creator updates · Automatic alerts · Community notifications</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Everything you need.</h2>
+          <p>Simple tools to manage creator notifications and keep your community informed.</p>
+        </div>
+
+        <div class="grid">
+          <article class="card">
+            <div class="feature-icon">🔔</div>
+            <h3>Automatic Notifications</h3>
+            <p>Send updates to your selected Discord channels when new content is detected.</p>
+          </article>
+
+          <article class="card">
+            <div class="feature-icon">🎯</div>
+            <h3>Creator Tracking</h3>
+            <p>Track supported creators and manage your server's notification feeds.</p>
+          </article>
+
+          <article class="card">
+            <div class="feature-icon">⚙️</div>
+            <h3>Easy Management</h3>
+            <p>Use slash commands to manage tracked sources, test notifications and view stats.</p>
+          </article>
+
+          <article class="card">
+            <div class="feature-icon">📊</div>
+            <h3>Feed Statistics</h3>
+            <p>Check total feeds, enabled feeds and alerts sent using the stats command.</p>
+          </article>
+
+          <article class="card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Server Control</h3>
+            <p>Choose the destination channel and configure notifications for your community.</p>
+          </article>
+
+          <article class="card">
+            <div class="feature-icon">✨</div>
+            <h3>Clean Experience</h3>
+            <p>Enjoy a straightforward command-based workflow built for Discord communities.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="platforms">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Follow your favourite platforms.</h2>
+          <p>Discover the platforms this project is designed to support.</p>
+        </div>
+
+        <div class="grid">
+          <article class="card platform-card">
+            <div class="feature-icon">▶️</div>
+            <h3>YouTube</h3>
+            <p>Receive notifications about new videos from tracked channels.</p>
+            <span class="tag">Video Updates</span>
+          </article>
+
+          <article class="card platform-card">
+            <div class="feature-icon">🟣</div>
+            <h3>Twitch</h3>
+            <p>Keep your community informed about tracked Twitch creators.</p>
+            <span class="tag">Creator Updates</span>
+          </article>
+
+          <article class="card platform-card">
+            <div class="feature-icon">𝕏</div>
+            <h3>X / Twitter</h3>
+            <p>Configure supported creator updates using the project's available integration.</p>
+            <span class="tag">Social Updates</span>
+          </article>
+        </div>
+        <p class="muted" style="text-align:center; margin-top:18px; font-size:.84rem;">
+          Actual availability depends on your bot configuration and API access.
+        </p>
+      </div>
+    </section>
+
+    <section id="commands">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Powerful, simple commands.</h2>
+          <p>Manage your feeds directly from Discord with slash commands.</p>
+        </div>
+
+        <div class="commands">
+          <div class="command"><code>/track</code><span>Add a creator or source to track.</span></div>
+          <div class="command"><code>/untrack</code><span>Remove a tracked source.</span></div>
+          <div class="command"><code>/list</code><span>View configured feeds.</span></div>
+          <div class="command"><code>/test</code><span>Test a notification configuration.</span></div>
+          <div class="command"><code>/stats</code><span>View feed totals and alerts sent.</span></div>
+          <div class="command"><code>/status</code><span>Check the notifier status.</span></div>
+          <div class="command"><code>/ping</code><span>Check bot response latency.</span></div>
+          <div class="command"><code>/help</code><span>Explore available commands.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Frequently asked questions.</h2>
+          <p>Some quick answers about Notifier.</p>
+        </div>
+
+        <div class="faq">
+          <details>
+            <summary>How do I add Notifier to my server?</summary>
+            <p>Use the Add to Discord button above. Configure your bot's invite URL in the website settings first.</p>
+          </details>
+
+          <details>
+            <summary>How do I track a creator?</summary>
+            <p>Use the /track slash command in your Discord server and follow the options provided by your bot.</p>
+          </details>
+
+          <details>
+            <summary>Does the website run my bot?</summary>
+            <p>No. GitHub Pages hosts this static website. Your Discord bot must run separately on your bot hosting service.</p>
+          </details>
+
+          <details>
+            <summary>Are all platforms always available?</summary>
+            <p>Availability depends on your bot's current integrations, API credentials and configuration.</p>
+          </details>
+
+          <details>
+            <summary>Where can I get help?</summary>
+            <p>Join the support server using the Support button after setting its invite URL in the configuration.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="cta">
+          <h2>Ready to upgrade your<br><span class="gradient-text">Discord community?</span></h2>
+          <p>Bring creator updates and community notifications together with Notifier.</p>
+          <a class="btn btn-primary" data-link="invite" href="#">Get Started — Add to Discord ↗</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Notifier. Made for Discord communities.</p>
+      <div class="footer-links">
+        <a data-link="support" href="#">Support</a>
+        <a data-link="github" href="#">GitHub</a>
+        <a data-link="privacy" href="#">Privacy</a>
+        <a data-link="terms" href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /*
+      WEBSITE CONFIGURATION
+      Replace the example URLs with your real links.
+    */
+    const CONFIG = {
+      invite: "https://discord.com/oauth2/authorize?client_id=YOUR_BOT_CLIENT_ID",
+      support: "https://discord.gg/YOUR_SUPPORT_INVITE",
+      github: "https://github.com/YOUR_GITHUB_USERNAME/notifier-website",
+      privacy: "#",
+      terms: "#"
+    };
+
+    document.querySelectorAll("[data-link]").forEach((element) => {
+      const key = element.dataset.link;
+      const url = CONFIG[key];
+
+      if (url && url !== "#") {
+        element.href = url;
+      } else {
+        element.href = "#";
+      }
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
